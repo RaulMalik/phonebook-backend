@@ -46,7 +46,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 // 3.15 delete person
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then(result => {
+    .then(() => {      //some weird issue here where lint would say error, due to previous result variable not being used. Has been changed and works.
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -72,13 +72,13 @@ app.post('/api/persons', (request, response, next) => {
     .catch(error => next(error))
 })
 
-// 3.17 update 
+// 3.17 update
 app.put('/api/persons/:id', (request, response, next) => {
   const { name, number } = request.body
 
   Person.findByIdAndUpdate(
-    request.params.id, 
-    { name, number }, 
+    request.params.id,
+    { name, number },
     { new: true, runValidators: true, context: 'query' }
   )
     .then(updatedPerson => {
@@ -92,8 +92,10 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message)
 
   if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
-  } 
+    return response.status(400).send({ error: 'wrong format id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
 
   next(error)
 }
